@@ -21,6 +21,7 @@ KEY_POS_PAN : 'u'
 KEY_NEG_PAN : 'i'
 KEY_POS_TILT : 'o'
 KEY_NEG_TILT : 'p'
+KEY_CAPTURE : 'c'
 
 # Misc/high level actions
 KEY_NOOP : ''

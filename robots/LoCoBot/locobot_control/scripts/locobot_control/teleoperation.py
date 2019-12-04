@@ -12,9 +12,11 @@ import copy
 import os
 import sys
 import termios
+import tempfile
 import time
 import tty
 
+import cv2
 import numpy as np
 import rospy
 import yaml
@@ -57,8 +59,11 @@ Moving around:
 
 6) Move Base (Arrow Keys)
     up (move forward) down (move backward)
-    left (turn left)  right (turn right) 
-    
+    left (turn left)  right (turn right)
+
+7) Capture image (Used to collect data)
+    c
+
 CTRL-C to quit
 """
 
@@ -189,6 +194,22 @@ class RobotTeleoperationServer():
                                  + sign * self.cfg['DELTA_ANGLE_CAMERA'],
                                  wait=False)
 
+    def see_camera_image(self):
+        rgb = self.bot.camera.get_rgb()
+        cv2.imshow('Color', rgb[:, :, ::-1])
+        cv2.waitKey(1)
+
+    def capture_image(self):
+        assert self.use_camera, 'Please set `use_camera:=true` when you launch the robot driver'
+        rgb = self.bot.camera.get_rgb()
+        tf = tempfile.NamedTemporaryFile(prefix='botcapture_', suffix='.jpg', dir='.', delete=False)
+        write_status = cv2.imwrite(tf.name, rgb[:, :, ::-1])
+        if write_status == True:
+            print('Image written to ' + tf.name)
+        else:
+            print('Failed to write image')
+
+
     def check_safety(self, key):
         """
         Simple heuristics for avoiding collisions
@@ -240,6 +261,8 @@ class RobotTeleoperationServer():
         rospy.sleep(1)
         while True:
             key = copy.deepcopy(self.cmd)
+            if key is not None:
+                print('command received ' + key)
             if key is None:
                 if self.is_robot_moving and \
                         time.time() - self.start_time > self.cfg['WAIT_TIME']:
@@ -251,6 +274,8 @@ class RobotTeleoperationServer():
                         pass
                     self.move_base(0, 0)
                     self.is_robot_moving = False
+                if self.use_camera:
+                    self.see_camera_image()
                 continue
             if key != self.cmd_prev:
 
@@ -313,6 +338,8 @@ class RobotTeleoperationServer():
                 self.move_base(0, self.base_angular_speed)
             elif key == KEY_BASE_TURNRIGHT:
                 self.move_base(0, -self.base_angular_speed)
+            elif key == self.cfg['KEY_CAPTURE']:
+                self.capture_image()
             elif key == self.cfg['KEY_RESET']:
                 self.reset()
             else:
