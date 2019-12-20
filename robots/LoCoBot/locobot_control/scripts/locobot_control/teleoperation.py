@@ -25,6 +25,7 @@ from locobot_control.srv import JointCommand
 from pyrobot import Robot
 from std_msgs.msg import Empty, String, Bool
 from tf.transformations import euler_from_quaternion
+import segment_helper
 
 KEY_CTRL_C = '\x03'
 KEY_BASE_FORWARD = '\x1b[A'
@@ -63,6 +64,9 @@ Moving around:
 
 7) Capture image (Used to collect data)
     c
+
+8) Segment and locate instances (this writes a file to disk on the devserver)
+    7
 
 CTRL-C to quit
 """
@@ -133,8 +137,8 @@ class RobotTeleoperationServer():
         self.status = True
         self.cmd_prev = None
         self.is_robot_moving = False
-        self.base_linear_speed = 0.05
-        self.base_angular_speed = 0.5
+        self.base_linear_speed = 0.5
+        self.base_angular_speed = 2
         self.start_time = time.time()
 
         self.target_alpha = 0.0
@@ -199,6 +203,9 @@ class RobotTeleoperationServer():
         cv2.imshow('Color', rgb[:, :, ::-1])
         cv2.waitKey(1)
 
+    def segment_xyzc(self):
+        segment_helper.segment_xyz(self.bot)
+
     def capture_image(self):
         assert self.use_camera, 'Please set `use_camera:=true` when you launch the robot driver'
         rgb = self.bot.camera.get_rgb()
@@ -250,7 +257,7 @@ class RobotTeleoperationServer():
                 self.is_robot_moving = True
                 self.bot.base.set_vel(fwd_speed=lin_speed,
                                       turn_speed=ang_speed,
-                                      exe_time=0.5)
+                                      exe_time=4)
             else:
                 self.bot.base.stop()
 
@@ -340,6 +347,8 @@ class RobotTeleoperationServer():
                 self.move_base(0, -self.base_angular_speed)
             elif key == self.cfg['KEY_CAPTURE']:
                 self.capture_image()
+            elif key == self.cfg['KEY_SEGMENT_LOCATE']:
+                self.segment_xyzc()
             elif key == self.cfg['KEY_RESET']:
                 self.reset()
             else:
