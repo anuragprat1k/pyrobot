@@ -191,15 +191,13 @@ class Slam(object):
         if not exec:
             # add obstacle in front of  cur location
             self.col_map += self.get_collision_map(
-                robot_state,
-                obstacle_size=(100, 100))
+                robot_state)
         # in case of locobot we need to check bumper state
         if self.robot_name == "locobot":
             if len(self.bumper_state.bumper_state) > 0:
                 for bumper_num in self.bumper_state.bumper_state:
                     self.col_map += self.get_collision_map(
-                        (robot_state[0], robot_state[1], robot_state[2] + self.bumper_num2ang[bumper_num]),
-                        obstacle_size=(100, 100))
+                        (robot_state[0], robot_state[1], robot_state[2] + self.bumper_num2ang[bumper_num]))
 
         # return True if robot reaches within threshold
         if np.linalg.norm(np.array(robot_state[:2]) - np.array(self.goal_loc[:2]))*100.0 \
@@ -276,7 +274,7 @@ class Slam(object):
         real_loc = real_loc.reshape(3)
         return real_loc[:2]
 
-    def get_collision_map(self, state, obstacle_size=(20, 20)):
+    def get_collision_map(self, state, obstacle_size=(10, 10)):
         """
         Helpful for creating collision map based on the bumper sensor reading.
         Creates collision map based on robot current location (in real world frame) and obstacle size
@@ -295,7 +293,7 @@ class Slam(object):
         map_state = [int(x) for x in map_state]
         center_map_state = self.real2map((0, 0))
         center_map_state = [int(x) for x in center_map_state]
-        col_map[center_map_state[1] + 1: center_map_state[1] + 1 + obstacle_size[1],
+        col_map[center_map_state[1] + 2: center_map_state[1] + 2 + obstacle_size[1],
         center_map_state[0] - int(obstacle_size[0] / 2): center_map_state[0] + int(obstacle_size[0] / 2)] = True
 
         # rotate col_map based on the state

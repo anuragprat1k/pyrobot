@@ -4,7 +4,8 @@
 - might need to install `skimage`
 ```
 load_pyrobot_env
-pip install skimage
+pip install scikit-image
+pip install scikit-fmm
 ```
 ## To run on habitat
 - launch roscore
@@ -31,7 +32,7 @@ roslaunch locobot_control main.launch use_base:=true use_camera:=true
 - In other terminal, launch the slam test
 ```
 load_pyrobot_env
-python slam_test.py --robot habitat --goal 4 0 0 --map_size 1000 --robot_rad 25 --save_vis
+python slam_test.py --robot locobot --goal 4 0 0 --map_size 1000 --robot_rad 25 --save_vis
 ```
 
 Results should look something like this
